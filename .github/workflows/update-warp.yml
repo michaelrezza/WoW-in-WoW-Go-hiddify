@@ -1,1 +1,67 @@
+name: Auto Update WARP-in-WARP IPv6
 
+on:
+  schedule:
+    - cron: '0 * * * *'  # Runs every hour
+  workflow_dispatch:       # Allows manual execution
+
+jobs:
+  update_warp_ipv6:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wireguard-tools curl jq fping
+
+      - name: Install WARP CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cloudflare-warp || \
+          (curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo tee /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg > /dev/null && \
+          echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ focal main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list && \
+          sudo apt-get update && \
+          sudo apt-get install -y cloudflare-warp)
+          sudo systemctl enable warp-svc
+          sudo systemctl start warp-svc
+
+      - name: Run WARP Setup (First Layer)
+        run: |
+          warp-cli disconnect || true
+          warp-cli connect
+          sleep 5
+
+      - name: Run WARP-in-WARP (Second Layer)
+        run: |
+          warp-cli disconnect || true
+          warp-cli connect
+          sleep 5
+
+      - name: Generate New IPv6 & Update Config
+        run: |
+          NEW_IPV6=$(curl -s https://api64.ipify.org)  
+          echo "🔄 New WARP-in-WARP IPv6: $NEW_IPV6"
+          
+          python3 ./scripts/update-ip-port.py
+
+      - name: Set up Git identity
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+
+      - name: Commit and Push Changes
+        run: |
+          git add hiddify-config.json || echo "⚠️ No files to update."
+          git diff --cached --quiet || git commit -m "🔄 Auto-update WARP-in-WARP IPv6: $NEW_IPV6"
+          git push || echo "⚠️ Failed to push changes."
+
+      - name: Auto-Restart on Failure
+        if: failure()
+        run: |
+          gh workflow run update-warp.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
