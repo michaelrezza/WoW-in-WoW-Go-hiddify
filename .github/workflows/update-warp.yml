@@ -1,1 +1,139 @@
+name: Install and Update WARP CLI
 
+on:
+  schedule:
+    - cron: "0 * * * *" # Runs every hour
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  install-update-warp:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Download Required Scripts and Templates
+        run: |
+          set -e
+          mkdir -p ./scripts
+          wget -O ./scripts/install-warp.sh https://raw.githubusercontent.com/Ptechgithub/warp/main/endip/install.sh
+          wget -O ./scripts/warp-go.sh https://raw.githubusercontent.com/michaelrezza/WoW-in-WoW-Go-hiddify/main/scripts/warp-go.sh
+          wget -O ./scripts/ipv6-scan.sh https://raw.githubusercontent.com/michaelrezza/WoW-in-WoW-Go-hiddify/main/scripts/ipv6-scan.sh
+          wget -O ./scripts/update-ip-port.py https://raw.githubusercontent.com/michaelrezza/WoW-in-WoW-Go-hiddify/main/scripts/update-ip-port.py
+          wget -O config-template.json https://raw.githubusercontent.com/michaelrezza/WoW-in-WoW-Go-hiddify/main/config-template.json
+          chmod +x ./scripts/*.sh
+          ls -l ./scripts/ # Debug: List scripts and permissions
+
+      - name: Update System & Install Dependencies
+        run: |
+          set -e
+          sudo apt-get update -y  # Add -y for automatic yes to prompts
+          sudo apt-get install -y --fix-missing wireguard-tools curl jq fping apt-transport-https lsb-release ca-certificates gnupg
+
+      - name: Fix NO_PUBKEY Error & Add Cloudflare GPG Key (Attempt 3 - URL Check & Verbose)
+        run: |
+          set -e
+          GPG_KEY_URL="https://developers.cloudflare.com/cloudflare-one/connections/connect-devices/warp/downloads/cloudflare-warp.asc" # Define variable for URL
+          for attempt in {1..3}; do # Try for 3 attempts
+            echo "Attempt ${attempt} to fix GPG key and repository..."
+            sudo rm -f /usr/share/keyrings/cloudflare-archive-keyring.gpg
+            # Use curl --fail-with-body to get more info on failure
+            if ! curl --fail-with-body -fsSL "${GPG_KEY_URL}" | sudo tee /usr/share/keyrings/cloudflare-archive-keyring.gpg > /dev/null; then
+              echo "❌ Failed to download GPG key from URL. Attempt ${attempt} failed."
+              sleep 10 # Wait and retry
+              continue # Continue to next attempt
+            fi
+            echo "✅ GPG key downloaded successfully. Verifying key..."
+            echo "deb [signed-by=/usr/share/keyrings/cloudflare-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-warp.list > /dev/null
+            sudo apt-get update -y
+            if ! apt-key verify /usr/share/keyrings/cloudflare-archive-keyring.gpg </dev/null; then
+              echo "❌ GPG key verification failed after download. Retrying..."
+              sleep 10 # Wait and retry
+            else
+              echo "✅ GPG key verification successful on attempt ${attempt}."
+              break # If successful, exit the loop
+            fi
+            if [ ${attempt} -eq 3 ]; then
+              echo "❌ GPG key fix failed after multiple attempts. Workflow will continue, but installation might fail."
+            fi
+          done
+
+      - name: Install or Update WARP-CLI (Retry on Fail)
+        run: |
+          set -e
+          for attempt in {1..3}; do
+            echo "Attempt ${attempt} to install WARP-CLI..."
+            sudo apt-get install -y cloudflare-warp cloudflared
+            if warp-cli --version; then
+              echo "✅ WARP-CLI installation successful on attempt ${attempt}."
+              break
+            else
+              echo "⚠️ WARP-CLI installation failed on attempt ${attempt}. Retrying..."
+              sleep 10
+            fi
+            if [ ${attempt} -eq 3 ]; then
+              echo "❌ WARP-CLI installation failed after multiple attempts. Workflow will continue, but WARP functionality might be limited."
+            fi
+          done
+
+      - name: Verify WARP-CLI Installation (Optional Check)
+        run: |
+          warp-cli --version || true # Check version, but don't fail workflow if it fails
+
+      - name: Download and Install WARP-GO
+        run: |
+          set -e
+          chmod +x ./scripts/install-warp.sh
+          sudo ./scripts/install-warp.sh || true # Continue even if WARP-GO install fails
+
+      - name: Ensure Scripts Are Executable (Double Check)
+        run: |
+          chmod +x ./scripts/*.sh
+          ls -l ./scripts/ # Debug: List scripts and permissions
+
+      - name: Create hiddify-config.json if not exists
+        run: |
+          if [ ! -f "hiddify-config.json" ]; then
+            echo "hiddify-config.json does not exist. Creating from template..."
+            cp config-template.json hiddify-config.json
+          fi
+
+      - name: Run WARP Setup & IPv6 Scan (Force IPv6 Option)
+        run: |
+          set -e
+          echo "2" | bash ./scripts/warp-go.sh || echo "⚠️ Warning: WARP setup failed!"
+
+      - name: Update IPv6 & Port in Config and Generate Keys
+        run: |
+          set -e
+          python3 ./scripts/update-ip-port.py || echo "❌ Error: IPv6 update failed! Check script output."
+
+      - name: Ensure Correct Permissions for hiddify-config.json
+        run: |
+          chmod 644 hiddify-config.json
+
+      - name: Set up Git identity
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+
+      - name: Commit and Push Changes
+        run: |
+          git add hiddify-config.json || echo "⚠️ No changes to commit."
+          git diff --staged --patch || true # Debug: Show diff if commit happens
+          git diff --cached --quiet || git commit -m "Auto-update WARP-in-WARP IPv6 & Port" && git push || echo "⚠️ Push failed."
+
+      - name: Auto-Restart on Failure
+        if: failure()
+        run: |
+          echo "Workflow failed. Triggering auto-restart..."
+          gh workflow run update-warp.yml
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
