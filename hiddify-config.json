@@ -53,13 +53,11 @@
       "tag": "IP-> Your IP address",
       "local_address": [
         "172.16.0.2/32",
-        "2606:4700:d0::1"
+        "[insert_ipv6_here]"
       ],
-      "private_key": "+EDn6fZ2ObHA3N5b5n8AGVKvaoc8CoU8ZzTpUWpPjXI=",
+      "private_key": "4CnSx7fQdRarxFuwhBi2ow997Htu6mQEO1+cZXgyNWU=",
       "server": "2606:4700:d0::1",
-      "server_port": [
-        34170
-      ],
+      "server_port": 43492,
       "peer_public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
       "reserved": [
         "reserved"
@@ -73,13 +71,11 @@
       "detour": "IP-> Your IP address",
       "local_address": [
         "172.16.0.2/32",
-        "2606:4700:d0::1"
+        "[insert_ipv6_here]"
       ],
-      "private_key": "+EDn6fZ2ObHA3N5b5n8AGVKvaoc8CoU8ZzTpUWpPjXI=",
+      "private_key": "4CnSx7fQdRarxFuwhBi2ow997Htu6mQEO1+cZXgyNWU=",
       "server": "2606:4700:d0::1",
-      "server_port": [
-        34170
-      ],
+      "server_port": 43492,
       "peer_public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
       "reserved": [
         "reserved"
