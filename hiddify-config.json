@@ -7,9 +7,9 @@
         "172.16.0.2/32",
         "2606:4700:d0::1"
       ],
-      "private_key": "MC2B8iOtohQY2ntKkSMqUpreGWd9m7dcUTwJswG5kmg=",
+      "private_key": "eGJAMrv4e0XHiOZmLj7pkjGDB7nv8W1mlZhDTi6p4U4=",
       "server": "2606:4700:d0::1",
-      "server_port": 10055,
+      "server_port": 35312,
       "peer_public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
       "reserved": [
         "reserved"
