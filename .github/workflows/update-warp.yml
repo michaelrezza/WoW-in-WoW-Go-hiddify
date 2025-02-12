@@ -1,1 +1,72 @@
+name: Auto Update WARP-in-WARP IPv6 & Port
 
+on:
+  schedule:
+    - cron: "0 * * * *"  # Runs automatically every hour
+  workflow_dispatch:  # Allows manual execution
+
+jobs:
+  update_warp_ipv6:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wireguard-tools curl jq fping
+
+      - name: Download cloudflared
+        run: |
+          wget https://github.com/cloudflare/cloudflared/releases/download/2025.2.0/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared-linux-amd64.deb
+          sudo apt-get install -f
+
+      - name: Download and Install WARP-GO
+        run: |
+          wget -O install-warp.sh https://raw.githubusercontent.com/Ptechgithub/warp/main/endip/install.sh
+          chmod +x install-warp.sh
+          sudo ./install-warp.sh
+
+      - name: Ensure Scripts Are Downloaded & Executable
+        run: |
+          mkdir -p ./scripts
+          wget -O ./scripts/warp-go.sh https://raw.githubusercontent.com/michaelrezza/WoW-in-WoW-Go-hiddify/main/scripts/warp-go.sh
+          wget -O ./scripts/ipv6-scan.sh https://raw.githubusercontent.com/michaelrezza/WoW-in-WoW-Go-hiddify/main/scripts/ipv6-scan.sh
+          wget -O ./scripts/update-ip-port.py https://raw.githubusercontent.com/michaelrezza/WoW-in-WoW-Go-hiddify/main/scripts/update-ip-port.py
+          chmod +x ./scripts/*.sh
+
+      - name: Run WARP Setup & IPv6 Scan
+        run: |
+          for i in {1..3}; do
+            echo "2" | bash ./scripts/warp-go.sh && break
+            sleep 5
+          done
+
+      - name: Update IPv6 & Port in Config
+        run: |
+          python3 ./scripts/update-ip-port.py
+
+      - name: Ensure Correct Permissions for hiddify-config.json
+        run: |
+          chmod 644 hiddify-config.json
+
+      - name: Set up Git identity
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+
+      - name: Commit and Push Changes
+        run: |
+          git add hiddify-config.json || echo "⚠️ No changes."
+          git diff --cached --quiet || git commit -m "🔄 Auto-update WARP-in-WARP IPv6 & Port"
+          git push || echo "⚠️ Push failed."
+
+      - name: Auto-Restart on Failure
+        if: failure()
+        run: |
+          gh workflow run update-warp.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
