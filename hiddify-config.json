@@ -55,9 +55,9 @@
         "172.16.0.2/32",
         "2606:4700:d0::1"
       ],
-      "private_key": "2HauG0eHynB3TTskSQB5X/uuWo1Flsg1dUMc2UbO8EQ=",
+      "private_key": "8CMm7Bnl7pEqQsu4v0ybv5OnPiwYmoLLh39qV2wdrkE=",
       "server": "2606:4700:d0::1",
-      "server_port": 3609,
+      "server_port": 49062,
       "peer_public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
       "reserved": [
         "reserved"
@@ -73,9 +73,9 @@
         "172.16.0.2/32",
         "2606:4700:d0::1"
       ],
-      "private_key": "2HauG0eHynB3TTskSQB5X/uuWo1Flsg1dUMc2UbO8EQ=",
+      "private_key": "8CMm7Bnl7pEqQsu4v0ybv5OnPiwYmoLLh39qV2wdrkE=",
       "server": "2606:4700:d0::1",
-      "server_port": 3609,
+      "server_port": 49062,
       "peer_public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
       "reserved": [
         "reserved"
