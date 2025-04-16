@@ -55,9 +55,9 @@
         "172.16.0.2/32",
         "2606:4700:d0::1"
       ],
-      "private_key": "GNSS2ZItieWjGBg3AgFrC21qFQcOoowGQcczmdrrm3s=",
+      "private_key": "aNrNpgZc6wfpeTJ081z7DLEoriFbYNvFN1ED2W1Se2s=",
       "server": "2606:4700:d0::1",
-      "server_port": 38895,
+      "server_port": 51573,
       "peer_public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
       "reserved": [
         "reserved"
