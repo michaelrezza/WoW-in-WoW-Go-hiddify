@@ -55,9 +55,9 @@
         "172.16.0.2/32",
         "2606:4700:d0::1"
       ],
-      "private_key": "+Gb8bbKF029/70xkL9Tbz4bFTrglqdQPOs8vNZ3Qf04=",
+      "private_key": "SBiWI/8irTcEXYV/3Q5delr3nWn9q4ctwSrzXfda4nM=",
       "server": "2606:4700:d0::1",
-      "server_port": 6612,
+      "server_port": 14950,
       "peer_public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
       "reserved": [
         "reserved"
