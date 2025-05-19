@@ -55,9 +55,9 @@
         "172.16.0.2/32",
         "2606:4700:d0::1"
       ],
-      "private_key": "GASA/zpuiQt33r5tkSjUkA0VpkgLi98dE9ii6pXxm18=",
+      "private_key": "aLTvCfEdZqX34Jp7sbsUUJrWzFIdHH6lwRnVaxS5QWU=",
       "server": "2606:4700:d0::1",
-      "server_port": 52674,
+      "server_port": 9187,
       "peer_public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
       "reserved": [
         "reserved"
